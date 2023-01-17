@@ -1,0 +1,84 @@
+---
+title: "Project 1: [216]Group 52"
+author: "Winston Mai, Caixia Zhang, Jiahui Huang, Mary Guo, Yaoying Cai, Yupeng Zhang"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## How to display data badly: write up
+    New display techniques have developed rapidly in recent years. In this article, the author mentions that some methods of data display may confuse people, and he or she summarizes these imperfections into twelve rules. In our opinion, “minimize the data-ink ratio,” “graph data out of context,” “change scales in Mid-Axis,” and “more is murkier” are the mistakes we often make when we analyze data. Although these rules point in the wrong direction, they provide us with some data displaying ideas. After our discussion, we find out that using the grid as few as possible to avoid hiding the data. If the grid contains different variables, we can choose some different bright colors to increase the visibility of the graph. We should also think carefully about what we want to convey in the figure, which will help us get to the point with the display. Also, paying attention to the scales and making the scales consistent can help us see the gap difference between the data more directly. We can also keep the data as concise as possible without leaving too many decimal points under the condition that the data is comparative. Furthermore, we can display one or more groups of charts as much as possible on one page. Through those methods, we can more intuitively display the data. 
+    
+    To sum up, the 12 rules of how to display data badly are all the problems we will make when analyzing data. In addition to the four methods that we focused on others are significant as well. At the same time, when we try to avoid the errors listed by the author, we can also try to analyze the data in several different ways and choose the clearest and most intuitive one.
+
+```{r bad-visual}
+knitr::include_graphics("C:\\R File\\Stat 20 Input\\Project_Pic2.png")
+```
+    
+    There are many kinds of documents that are full of bad data display, causing a lot of misunderstandings and even more serious consequences. As more images make their way into the news and social media, explaining everything from climate change to disease outbreaks, poor visuals can also damage the public's understanding of the truth. The above poor visualization of data in a picture is created by the Pew Research Center which can be misleading or confusing to many people. Using the 12 rules to analyze this graph can help build a clear distinction between the truth and the bad visualization data display.
+    
+    With a stable baseline, the graph simply showed the audience the ideological placement of different media resources. However, it satisfied some of the 12 test rules, which demonstrated that the chart portrayed data inaccurately. The chart minimized the data density, hide the complete information, and ignored the importance and the visual metaphor altogether, so that the audience could not easily distinguish the differences between the channels. Typically, when designers have a lot of information that they cannot abridge, they put it in tables to make it more compact. Here they used distribution to show people each media channel across the spectrum. In the diagram, we can see that the distance between the channels of each media is particularly significant. The points are only listed in the table, and people cannot observe the comparison between each channel because the graph was changed scales and incompletely graphed murkier data, which takes the graph out of context.
+    
+    Avoiding the pitfalls of designing diagrams can help the reader better understand the research. The12 rules pointed out the common errors and provided a good insight to help explain the meaning of the visualization. Visualizations can reveal patterns, trends, and connections that are difficult or impossible to find in any other way.
+    
+    
+Works cited
+
+“Commentaries,” The American Statistician, May, 1984, Vol, 38, No.2 
+
+“Ideological Placement of Each Source’s Audience,” Pew Resource Center, January 26, 2016.
+
+**********
+## Maternal Smoking and Infant Health
+
+```{r load-data}
+babies <- read.csv("C:\\R File\\Stat 20 Input\\babies.csv",header = TRUE)
+# check that it looks as you expect
+str(babies)
+head(babies)
+```
+
+We use str() and head() function to get a sense of what is in the data set and how it looks like in the excel file. Before doing the summaries and analysis using R coding, we suppose that the babies in the non-smoking group will have a heavier weight on average than the babies in the smoking group.
+
+### Numerical summaries of the data
+
+``` {r numerical-summary}
+babies<-read.csv("C:\\R File\\Stat 20 Input\\babies.csv")
+smokers <- subset(babies, smoke==1)
+non_smokers<-subset(babies,smoke==0)
+#the average weight of babies in the smoke group
+mean(smokers$bwt)
+#the average weight of babies in the non-smoke group
+mean(non_smokers$bwt)
+#the five-number summaries of baby's weight in the smoke group
+summary(smokers$bwt,c(0,0.25,0.5,0.75,1),type=1)
+#the five-number summaries of baby's weight in the non-smoke group
+summary(non_smokers$bwt,c(0,0.25,0.5,0.75,1),type=1)
+n<-length(smokers$bwt)
+#the standard deviation of baby's weight in the smoke group
+sd(smokers$bwt)*sqrt((n-1)/n)
+n<-length(non_smokers$bwt)
+#the standard deviation of baby's weight in the non-smoke group
+sd(non_smokers$bwt)*sqrt((n-1)/n)
+```
+
+### Graphical summaries of the data
+
+``` {r histograms}
+library(ggplot2)
+library(dplyr)
+babies <- filter(babies, smoke <= 1)
+ggplot(babies) + geom_histogram(aes(x = bwt, y = ..density..), bins = 20, fill = 'light pink', color = 'black') + ggtitle("Weight of babies") + facet_wrap(~smoke)
+"the distribution of smoke and nonsmoke histograms do not have a huge difference. But we can tell that there are more nonsmokers' babies in the samples." 
+``` 
+
+``` {r box-plots}
+ggplot(babies) + geom_boxplot(aes(y = bwt), fill = c("cadetblue", "cornsilk")) + ggtitle("Weight of babies") + facet_wrap(~smoke)
+"the median point, 25th percentile, and 75th percentile of smokers' babies are lower than nonsmokers'. There are more outliers in the boxplot of Nonsmokers' babies."
+
+```
+
+### Discussion and conclusion 
+
+  By analyzing the numerical and graphical summaries of the data, we conclude that maternal smoking is harmful to fetal health, at least it will affect the birth weight on average as the data showed. The numerical summaries present us with numbers that babies with non-smoking habits mother are heavier in general, while the boxplot delivers a visual graphic to enhance our understanding with the interquartile range rule to see if there are outliers. The histograms show that both smoking and non-smoking data groups are in a normal distribution. In the five-number summaries, we can see that 4 out of 5 numbers in the non-smoking group are greater than the smoking group as expected. Interestingly, we see that the minimum in the non-smoking group is smaller. The lightest baby has a non-smoking mother indicates that there are some other confounding factors that will affect the baby's weight. The food consumed during pregnancy, hours of sleep, and lifestyles of the mothers are some factors that will significantly determine the baby's weight and health.

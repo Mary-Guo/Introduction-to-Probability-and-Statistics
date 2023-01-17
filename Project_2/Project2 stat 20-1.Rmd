@@ -1,0 +1,226 @@
+---
+title: "Project 2: [216]Group 52"
+author: 
+- Winston Mai
+- Caixia Zhang
+- Jiahui Huang
+- Mary Guo
+- Yaoying Cai
+- Yupeng Zhang
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document: default
+  pdf_document: default
+header-includes:
+- \usepackage{framed}
+- \usepackage{xcolor}
+- \let\oldquote=\quote
+- \let\endoldquote=\endquote
+- \colorlet{shadecolor}{blue!10}
+- \renewenvironment{quote}{\begin{shaded*}\begin{oldquote}}{\end{oldquote}\end{shaded*}}
+---  
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+> This part of the project was created by Christine Le.
+
+
+
+This dataset was downloaded from usafacts.org with confirmed COVID-19 Cases in the United States as of October 26th, 2020. The cases are listed by County and State. 
+
+**Note**: make sure to set eval= TRUE for **all** the provided code chunks
+
+load libraries
+```{r eval= TRUE}
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+```
+
+load dataset
+```{r eval= TRUE}
+cases_county <- read_csv("/Users/celiahuang/Desktop/covid_cases_county.csv")
+```
+
+## Part I. Exploring your data
+
+You will compare the rates across two states, California, which implemented shelter in place early; and another state that had not yet implemented SIP three months after the first state's order went into effect. 
+From the table Choose ONE comparison to make.
+
+|  State 1  |   Order Date   | State 2|
+|-----------|----------------|--------|
+|California | March 19, 2020 |Arkansas|
+|California | March 19, 2020 |Nebraska|
+|California | March 19, 2020 |North Dakota|
+|California | March 19, 2020 |South Dakota|
+|California | March 19, 2020 |Iowa|
+
+
+Now **modify** the code below (in the R chunk) for your specific state. Then run this code to get your data into confirmed cases by state and date 
+The abbreviations for each state are as follows:
+
+|  State 1    |  Abbreviation | 
+|-------------|---------------|
+|California   | CA |
+|Arkansas     | AR |
+|Nebraska     | NE |
+|North Dakota | ND |
+|South Dakota | SD |
+|Iowa         | IA |
+
+
+```{r eval=TRUE}
+covid_cases_by_state<- cases_county %>%
+  filter(State == "CA" | State == "ND")%>%
+  group_by(date, State) %>%
+  mutate(ConfirmedCases = sum(cases)) %>%
+  filter(!duplicated(date)) %>%
+  select(-cases, -`County Name`, - countyFIPS) %>% #remove this variables
+  ungroup()
+```
+
+#### Question 1. 
+Using this summary dataset, make a graph of the confirmed cases in the two states since January 22, 2020. You can use any graph you would like, but recall the first mini-project on how to display data properly.Explain how you chose to display your data and why. *Hint: think about the total population per state and is there a way we can compare the number of cases to take into account the **difference** in total population.*
+
+For your use: 
+
+|  State 1    | Population  | 
+|-------------|-------------|
+|California   | 39,250,017  |
+|Arkansas     | 2,988,248   |
+|Nebraska     | 1,907,116   |
+|North Dakota | 757,952     |
+|South Dakota | 865,454     |
+|Iowa         |3,134,693    |
+
+
+
+```{r}
+CAprop<- covid_cases_by_state %>%
+  filter(State == "CA") %>%
+  group_by(date,State) %>%
+  mutate(prop = ConfirmedCases/39250017*100) %>%
+  select(-ConfirmedCases )%>%
+  ungroup()
+```
+```{r}
+NDprop<- covid_cases_by_state %>%
+  filter(State == "ND") %>%
+  group_by(date,State) %>%
+  mutate(prop = ConfirmedCases/757952*100) %>%
+  select(-ConfirmedCases )%>%
+  ungroup()
+```
+```{r}
+
+Prop <- rbind(CAprop, NDprop)
+
+```
+```{r}
+ggplot(Prop) + geom_line(aes(x = date, y = prop, color = State)) + xlab("Date") +ylab("Confimred Cases Per Hundred People")+ggtitle("The Confirmed Cases Per Hundred People across CA&ND over months")
+```
+
+
+
+>We choose to use a line chart with the title "The Confirmed Cases Per Hundred People across CA&ND from 2020/1/22 to 2020/10/26". The chart's Y-axis is " Confirmed Cases Per Hundred People," and X-axis is "Date."  We won’t choose to use histogram since we have too many data from January to October. If we use histogram to compare the relevant data across two states day by day, it would make people more confused. Compared with histogram, it's easier to see trends in the line graph. Since both states have different populations, we use confirmed cases divided by population to determine the percentages of the confirmed cases in both states. Because the proportions are relatively small, we want to adjust it by multiplying one hundred. We can then get the number of confirmed cases per hundred people for the Y-axis. In this way, we will have an equal distance between each unit on the Y-axis.  For X-axis, due to there being ten months, if we label every month, it would be compacted; thus, we label it every three months, which makes the graph clear and conveys information well. In this graph, we display the relevant data from 2020/1/22 to 2020/10/26. Moreover, both two lines start at where y is equal to zero and x is equal to Jan, but each with different color, so people can recognize how the number of confirmed cases in different states changed over time. 
+
+#### Question 2.  
+In one or two sentences, briefly describe the trends you see between the two states.
+
+
+>The line of ND in this chart looks like an exponential curve. From Jan. 22nd to June 2020, the lines of CA and ND have similar growth trends, and the number of cases in both states increases slowly and similarly.
+The difference between the two states started from the end of June, where the number of ND confirmed cases per hundred people continues growing exponentially. In contrast, the number of CA's confirmed cases increased with a larger rate from July to mid-August and slowed down afterward. By September, the number of ND's confirmed cases exceeded the number of CA's. 
+
+
+
+
+## Part II Comparing COVID-19 Rates by State
+
+For the questions below, use the dataset from Part I and pooled SEs.
+
+#### Question 1.
+Using **dplyr** obtain the proportion of confirmed cases on October 26th, 2020 (`2020-10-26`) in each state you found above.
+
+```{r}
+propCA <- filter(CAprop, date == "2020-10-26")
+prop_CA <- propCA$prop/100
+prop_CA
+propND <- filter(NDprop, date == "2020-10-26")
+prop_ND <- propND$prop/100
+prop_ND
+```
+
+
+
+#### Question 2.
+Calculate the 95% confidence interval for the true difference in proportions in the two states, and interpret your confidence interval.
+```{r}
+n_CA= 39250017 
+n_ND= 757952
+Z_alpha_half = qnorm(0.95+(1-0.95)/2)
+phat_CA = 2.320715/100
+phat_ND = 5.0453062991/100
+SE_CA = ((phat_CA*(1-phat_CA))/n_CA)^0.5
+SE_ND = ((phat_ND*(1-phat_ND))/n_ND)^0.5
+
+observed_diff = phat_ND - phat_CA
+SE_diff =sqrt((SE_CA)^2+(SE_ND)^2)
+CI_LB =observed_diff-Z_alpha_half*SE_diff
+CI_UB =observed_diff+Z_alpha_half*SE_diff
+
+CI_LB
+CI_UB
+```
+
+
+> 95% confidence interval for the true difference in proportions of confirmed cases on October 26th, 2020 in CA and ND is (0.02675091， 0.02774091）
+The “95%” says that 95% of confidence interval for the true difference in proportions of confirmed cases on October 26th, 2020 in CA and ND will include the true mean, but 5% won’t. we cannot know if the true difference of proportions between CA and ND is between 0.02675091 and 0.02774091 with certainty, but unless we got an unusual sample, the true difference of proportion is in our interval.
+
+#### Question 3. Suppose we want to perform hypothesis test comparing the proportion of confirmed cases in each state, setting the significance level for the test at $$\alpha = 0.05$$. You may assume that you have an SRS. 
+Which hypothesis test should you use? What is your null and alternative hypothesis here?
+
+> We will use the pooled sample test of proportions. It will be a two tailed test. The null hypothesis and alternative hypothesis are  
+                        H0: P(CA) = P(ND)    
+There is no real difference with the proportion of confirmed cases in these two states  
+                        H1: P(CA) =/= P(ND)  
+There is difference with the proportion of confirmed cases in CA (state that implemented shelter in place early) and ND (state that had not yet implemented SIP three months after the first state's order went into effect)
+
+#### Question 4.  Now perform your hypothesis test using pnorm. State your conclusion.
+
+```{r}
+propCA <- filter(CAprop, date == "2020-10-26")
+prop_CA <- propCA$prop
+propND <- filter(NDprop, date == "2020-10-26")
+prop_ND <- propND$prop
+populationCA = 39250017
+populationND = 757952
+
+phat <- ((prop_CA/100)*populationCA + (prop_ND)/100*populationND)/(populationCA+populationND)
+
+se_diff <- sqrt((phat*(1-phat)/populationCA) + (phat*(1-phat)/populationND))
+
+z <- (prop_ND/100 - prop_CA/100 - 0)/se_diff
+alpha = 0.05
+p_value <- 2*(1 - pnorm(z))
+p_value
+p_value > alpha
+```
+
+
+> The p value is 0, which is smaller than our significance level. It suggests that our data is highly significant so we have strong evidence to reject our null hypothesis. It means that there is real difference between the proportion of confirmed cases in CA and ND.
+# Part III: Writing assignment
+
+Please listen to the [November 10 episode](https://www.nytimes.com/2020/11/10/podcasts/the-daily/election-polls-biden-trump.html) of the NY times podcast *The Daily*. In this, the host Michael Barbaro speaks with Nate Cohn about the polling errors in the polls for this election. Nate Cohn is the journalist who headed the New York Times polling. They discuss the polling error, what it led to, and what may be the causes. They also talk about polls in general. Give us your takeaway from this episode. Write down what you understand by polling error and what you understand as going awry (if anything) in this election season with the polls. Barbaro and Cohn also discuss the future of polling. What does your group think about this? Which category or assessment do you agree with? Why?
+
+Make sure that your writeup is **not more than 400 words** and please type it in the document here. 
+
+>  In the N.Y. times podcast The Daily, Nate Cohn mentioned that they gave more weight to the white working-class like in 2016 due to a lack of sample voters in this class. However, they got the result way off compared to the 2016 election result.  
+  Cohn gave a couple of possible reasons. First, an increase in participation on the liberal side over the last four years. Secondly, Trump voters are less likely to respond to surveys than they were due to the president's attacks on the media, which have gradually eroded their trust in surveys.  I agree with this because President Trump did use Twitter to spread many messages about fake media and encourage his voters not to trust the media. Additionally, the 2016 pollster was so off from the actual election results that Trump's voters did not trust the media. For these reasons, the pollster could not get the sample that truly represents all the different classes and different party supporters, and result in polling errors based on statistics volunteering sampling basis.   
+  Additionally, Cohn talked about how to interpret the polling error. First, the polls are imprecise but still useful. Secondly, the polls are so imprecise, but no longer useful. However, Cohn explains that the range of possible outcomes in national elections is tight, so the amount of error in a poll is basically equal to the range of the possible results. Thirdly, that polls are misleading and counterproductive.   
+  Finally, they talked about the future of polling. Nate expressed that they would go through the data after the election, make changes about these things that they can fix, and continue to do polling in the future. If there is nothing they can fix, they will think about whether to abandon the enterprise. However, he thinks to have a read on the electorate's attitudes is really important to this democracy in the U.S.. My group agreed that having a read on the electorate's attitudes is essential, which will potentially avoid panic from the public and make the society a little more stable before every election compared with if the public do not have a basic idea of the electorate. Also, if there are no pollsters at all, people will not have any idea about the possible election result, and it seems less transparent of the election in some ways.
+
